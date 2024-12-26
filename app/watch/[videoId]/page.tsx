@@ -1,29 +1,33 @@
+// app/watch/[videoId]/page.tsx
+
 import React, { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { types } from 'cassandra-driver';
 import VideoPlayer from '../../components/VideoPlayer';
 import { dbOperations } from '../../lib/scylla';
+import { validate } from 'uuid';
 
 interface PageProps {
   params: {
     videoId: string;
   };
   searchParams: {
-    t?: string;  // timestamp parameter for continuing from a specific point
+    t?: string;
   };
 }
 
 async function getVideoDetails(videoId: string) {
   try {
     const video = await dbOperations.getVideo(videoId);
-    
+    console.log("Getting video details");
     if (!video) {
+      console.log('No video found');
       return null;
     }
-
+    console.log('Video found: ' + video);
     return {
       ...video,
-      video_id: video.video_id.toString(),
+      video_id: video.video_id,
       created_at: video.created_at?.toISOString(),
     };
   } catch (error) {
@@ -43,16 +47,20 @@ async function getWatchProgress(userId: string, videoId: string) {
 }
 
 export default async function WatchPage({ params, searchParams }: PageProps) {
-  const video = await getVideoDetails(params.videoId);
-
+  const resolvedParams = await params; // Await params if necessary
+  const resolvedSearchParams = await searchParams;
+  const videoId = resolvedParams.videoId.toString();
+  console.log("video id: " + videoId)
+  const video = await getVideoDetails(videoId);
   if (!video) {
     notFound();
   }
 
-  // If there's a timestamp in the URL, use that, otherwise get the saved progress
-  const initialProgress = searchParams.t 
-    ? parseInt(searchParams.t, 10)
-    : await getWatchProgress('default-user', params.videoId);
+  const initialProgress = resolvedSearchParams.t
+    ? parseInt(resolvedSearchParams.t, 10)
+    : await getWatchProgress('default-user', videoId);
+  
+    console.log("Initial progress: " + initialProgress);
 
   const handleProgressUpdate = async (progress: number) => {
     'use server';
@@ -60,7 +68,7 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
     try {
       await dbOperations.updateWatchProgress(
         'default-user',
-        params.videoId,
+        videoId,
         progress
       );
     } catch (error) {
@@ -73,7 +81,7 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
       <Suspense fallback={<div>Loading video...</div>}>
         <div className="aspect-video bg-black rounded-lg overflow-hidden">
           <VideoPlayer
-            videoId={video.video_id}
+            videoId={videoId}
             userId="default-user"
             videoUrl={video.video_url}
             initialProgress={initialProgress}
@@ -81,7 +89,6 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
           />
         </div>
       </Suspense>
-
       <div className="mt-6">
         <h1 className="text-2xl font-bold">{video.title}</h1>
         <p className="mt-2 text-gray-600">{video.description}</p>
@@ -98,7 +105,6 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
             ))}
           </div>
         )}
-
         {video.metadata && Object.keys(video.metadata).length > 0 && (
           <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
             {Object.entries(video.metadata).map(([key, value]) => (

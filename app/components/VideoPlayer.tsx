@@ -30,7 +30,7 @@ const VideoPlayer = ({
 
   useEffect(() => {
     const updateInterval = 5000; // Update progress every 5 seconds
-    
+    console.log("Playing video: " + isPlaying);
     if (isPlaying) {
       progressUpdateInterval.current = setInterval(() => {
         if (videoRef.current) {

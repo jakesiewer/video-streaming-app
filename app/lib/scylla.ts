@@ -1,10 +1,12 @@
 // lib/scylla.ts
 import { Client, types } from 'cassandra-driver';
+import { validate } from 'uuid';
 
 // ScyllaDB client configuration
 export const scyllaClient = new Client({
     contactPoints: ['localhost:9042'],
     localDataCenter: 'datacenter1',
+    keyspace: 'video_streaming',
     pooling: {
         maxRequestsPerConnection: 1024,
         coreConnectionsPerHost: {
@@ -162,14 +164,14 @@ export const dbOperations = {
         return videoId;
     },
 
-    async getVideo(videoId: string | types.Uuid): Promise<Video | null> {
+    async getVideo(videoId: string ): Promise<Video | null> {
         const query = 'SELECT * FROM video_streaming.videos WHERE video_id = ?';
         const result = await scyllaClient.execute(query, [videoId], { prepare: true });
 
         // If there's a result, map it to the Video interface
         if (result.rows.length > 0) {
             const row = result.rows[0];
-            return mapRowToVideo(row);
+;           return mapRowToVideo(row);
         }
 
         // Return null if no rows were found
@@ -178,8 +180,8 @@ export const dbOperations = {
 
     // Watch progress operations
     async updateWatchProgress(
-        userId: string | types.Uuid,
-        videoId: string | types.Uuid,
+        userId: string,
+        videoId: string,
         timestamp: number
     ): Promise<void> {
         const query = `
@@ -199,15 +201,13 @@ export const dbOperations = {
     },
 
     async getWatchProgress(
-        userId: string | types.Uuid,
-        videoId: string | types.Uuid
+        userId: string,
+        videoId: string
     ): Promise<WatchProgress | null> {
-        const query = `
-      SELECT * FROM video_streaming.watch_progress 
-      WHERE user_id = ? AND video_id = ?
-    `;
-
-        const result = await scyllaClient.execute(query, [userId, videoId], { prepare: true });
+        // const query = `SELECT * FROM video_streaming.watch_progress WHERE user_id = '${userId}' AND video_id = '${videoId}'`;
+        const query = `SELECT * FROM video_streaming.watch_progress WHERE video_id = ${videoId}`;
+    
+        const result = await scyllaClient.execute(query, [], { prepare: true });
 
         // If there's a result, map it to the WatchProgress interface
         if (result.rows.length > 0) {
@@ -221,8 +221,8 @@ export const dbOperations = {
 
     // User videos operations
     async updateUserVideo(
-        userId: string | types.Uuid,
-        videoId: string | types.Uuid,
+        userId: string,
+        videoId: string,
         lastPosition: number
     ): Promise<void> {
         const video = await this.getVideo(videoId);
@@ -293,6 +293,7 @@ function mapRowToUserVideo(row: any): UserVideo {
         watched_percentage: row.watched_percentage,
         last_position: row.last_position,
         last_watched: row.last_watched
+
     };
 }
 
