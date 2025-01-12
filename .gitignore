@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# seed data
+/public/seed_data/photos/*
+/public/seed_data/videos/*

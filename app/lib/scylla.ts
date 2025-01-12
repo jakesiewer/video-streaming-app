@@ -69,7 +69,7 @@ export interface Video {
     duration: number;
     thumbnail_url: string;
     video_url: string;
-    created_at: Date;
+    created_at: Date | null;
     tags?: Set<string>;
     metadata?: { [key: string]: string };
 }
@@ -140,8 +140,7 @@ export async function initializeDatabase() {
 // Utility functions for common database operations
 export const dbOperations = {
     // Video operations
-    async createVideo(video: Omit<Video, 'video_id' | 'created_at'>): Promise<types.Uuid> {
-        const videoId = types.Uuid.random();
+    async createVideo(video: Omit<Video, 'created_at'>): Promise<types.Uuid> {
         const query = `
       INSERT INTO video_streaming.videos (
         video_id, title, description, duration, 
@@ -151,7 +150,7 @@ export const dbOperations = {
     `;
 
         await scyllaClient.execute(query, [
-            videoId,
+            video.video_id,
             video.title,
             video.description,
             video.duration,
@@ -161,7 +160,7 @@ export const dbOperations = {
             video.metadata
         ], { prepare: true });
 
-        return videoId;
+        return video.video_id;
     },
 
     async getVideo(videoId: string ): Promise<Video | null> {
