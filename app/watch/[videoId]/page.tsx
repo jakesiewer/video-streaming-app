@@ -90,7 +90,7 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
         </div>
       </Suspense>
       <div className="mt-6">
-        <h1 className="text-2xl font-bold">{video.title}</h1>
+        <h1 className="text-2xl text-gray-800 font-bold">{video.title}</h1>
         <p className="mt-2 text-gray-600">{video.description}</p>
         
         {video.tags && video.tags.size > 0 && (

@@ -56,7 +56,7 @@ export default function ContinueWatching({ userId }: ContinueWatchingProps) {
                 />
               </div>
             </div>
-            <h3 className="mt-2 text-lg font-semibold">{video.title}</h3>
+            <h3 className="mt-2 text-gray-800 text-lg font-semibold">{video.title}</h3>
           </Link>
         ))}
       </div>

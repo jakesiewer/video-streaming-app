@@ -23,7 +23,7 @@ export default function VideoGrid({ videos }: VideoGridProps) {
               className="object-cover transition-transform group-hover:scale-105"
             />
           </div>
-          <h3 className="mt-2 text-lg font-semibold">{video.title}</h3>
+          <h3 className="mt-2 text-lg text-gray-800 font-semibold">{video.title}</h3>
           <p className="text-sm text-gray-600 line-clamp-2">
             {video.description}
           </p>

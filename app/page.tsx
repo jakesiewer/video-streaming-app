@@ -20,13 +20,13 @@ export default async function Home() {
     <div className="space-y-8">
       {/* Continue Watching Section */}
       <section>
-        <h2 className="text-2xl font-bold mb-4">Continue Watching</h2>
+        <h2 className="font-sans text-slate-800 text-2xl font-bold mb-4">Continue Watching</h2>
         <ContinueWatching userId="default-user" />
       </section>
 
       {/* All Videos Section */}
       <section>
-        <h2 className="text-2xl font-bold mb-4">All Videos</h2>
+        <h2 className="font-sans text-slate-800 text-2xl font-bold mb-4">All Videos</h2>
         <VideoGrid videos={videos} />
       </section>
     </div>
