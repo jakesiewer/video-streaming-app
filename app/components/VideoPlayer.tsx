@@ -1,6 +1,8 @@
 'use client'
 import React, { useEffect, useRef, useState } from 'react';
 
+// commented lines will be uncommented upon completion of continue watching feature
+
 interface VideoPlayerProps {
   videoId: string;
   userId: string;
@@ -10,16 +12,17 @@ interface VideoPlayerProps {
 }
 
 const VideoPlayer = ({
-  videoId,
-  userId,
+  // videoId,
+  // userId,
   videoUrl,
   initialProgress,
   onProgressUpdate,
 }: VideoPlayerProps) => {
+  // const videoIdFromUrl = videoUrl.split('v=')[1];
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(initialProgress);
-  const [duration, setDuration] = useState(0);
+  // const [currentTime, setCurrentTime] = useState(initialProgress);
+  // const [duration, setDuration] = useState(0);
   const progressUpdateInterval = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
@@ -35,7 +38,7 @@ const VideoPlayer = ({
       progressUpdateInterval.current = setInterval(() => {
         if (videoRef.current) {
           const currentProgress = Math.floor(videoRef.current.currentTime);
-          setCurrentTime(currentProgress);
+          // setCurrentTime(currentProgress);
           onProgressUpdate(currentProgress);
         }
       }, updateInterval);
@@ -48,40 +51,20 @@ const VideoPlayer = ({
     };
   }, [isPlaying, onProgressUpdate]);
 
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
+  // const handleTimeUpdate = () => {
+  //   if (videoRef.current) {
+  //     setCurrentTime(videoRef.current.currentTime);
+  //   }
+  // };
 
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-    }
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      setCurrentTime(videoRef.current.currentTime);
-    }
-  };
-
-  const handleLoadedMetadata = () => {
-    if (videoRef.current) {
-      setDuration(videoRef.current.duration);
-    }
-  };
+  // const handleLoadedMetadata = () => {
+  //   if (videoRef.current) {
+  //     setDuration(videoRef.current.duration);
+  //   }
+  // };
 
   const handlePlay = () => setIsPlaying(true);
   const handlePause = () => setIsPlaying(false);
-
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTime = parseFloat(e.target.value);
-    if (videoRef.current) {
-      videoRef.current.currentTime = newTime;
-      setCurrentTime(newTime);
-      onProgressUpdate(newTime);
-    }
-  };
 
   return (
     <div className="relative w-full h-full">
@@ -89,27 +72,12 @@ const VideoPlayer = ({
         ref={videoRef}
         className="w-full h-full"
         src={videoUrl}
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
+        // onTimeUpdate={handleTimeUpdate}
+        // onLoadedMetadata={handleLoadedMetadata}
         onPlay={handlePlay}
         onPause={handlePause}
         controls
       />
-      
-      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-4 text-white">
-        <div className="flex items-center gap-4">
-          <span className="text-sm">{formatTime(currentTime)}</span>
-          <input
-            type="range"
-            min="0"
-            max={duration}
-            value={currentTime}
-            onChange={handleSeek}
-            className="flex-grow h-2 rounded-lg appearance-none bg-gray-600 cursor-pointer"
-          />
-          <span className="text-sm">{formatTime(duration)}</span>
-        </div>
-      </div>
     </div>
   );
 };
