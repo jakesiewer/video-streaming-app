@@ -62,20 +62,6 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
   
     console.log("Initial progress: " + initialProgress);
 
-  const handleProgressUpdate = async (progress: number) => {
-    'use server';
-    
-    try {
-      await dbOperations.updateWatchProgress(
-        'default-user',
-        videoId,
-        progress
-      );
-    } catch (error) {
-      console.error('Error updating watch progress:', error);
-    }
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <Suspense fallback={<div>Loading video...</div>}>
@@ -85,7 +71,7 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
             userId="default-user"
             videoUrl={video.video_url}
             initialProgress={initialProgress}
-            onProgressUpdate={handleProgressUpdate}
+            // onProgressUpdate={handleProgressUpdate}
           />
         </div>
       </Suspense>

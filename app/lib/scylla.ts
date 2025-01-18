@@ -188,7 +188,7 @@ export const dbOperations = {
         user_id, video_id, timestamp, last_watched
       ) VALUES (?, ?, ?, toTimestamp(now()))
     `;
-
+        console.log(query);
         await scyllaClient.execute(query, [
             userId,
             videoId,

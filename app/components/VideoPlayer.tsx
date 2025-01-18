@@ -1,5 +1,6 @@
 'use client'
 import React, { useEffect, useRef, useState } from 'react';
+import { updateProgress } from 'app/actions/video';
 
 // commented lines will be uncommented upon completion of continue watching feature
 
@@ -8,15 +9,13 @@ interface VideoPlayerProps {
   userId: string;
   videoUrl: string;
   initialProgress: number;
-  onProgressUpdate: (progress: number) => void;
 }
 
 const VideoPlayer = ({
-  // videoId,
-  // userId,
+  videoId,
+  // userId,§
   videoUrl,
   initialProgress,
-  onProgressUpdate,
 }: VideoPlayerProps) => {
   // const videoIdFromUrl = videoUrl.split('v=')[1];
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -49,8 +48,18 @@ const VideoPlayer = ({
         clearInterval(progressUpdateInterval.current);
       }
     };
-  }, [isPlaying, onProgressUpdate]);
+  }, [isPlaying]);
 
+
+  const onProgressUpdate = async (progress: number) => {
+
+    try {
+      const message = await updateProgress('00000000-0000-0000-0000-000000000000', videoId, progress);
+      console.log(message);
+    } catch (error) {
+      console.error('Error updating watch progress:', error);
+    }
+  };
   // const handleTimeUpdate = () => {
   //   if (videoRef.current) {
   //     setCurrentTime(videoRef.current.currentTime);
