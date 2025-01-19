@@ -24,7 +24,7 @@ async function getVideoDetails(videoId: string) {
       console.log('No video found');
       return null;
     }
-    console.log('Video found: ' + video);
+
     return {
       ...video,
       video_id: video.video_id,
@@ -50,7 +50,6 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
   const resolvedParams = await params; // Await params if necessary
   const resolvedSearchParams = await searchParams;
   const videoId = resolvedParams.videoId.toString();
-  console.log("video id: " + videoId)
   const video = await getVideoDetails(videoId);
   if (!video) {
     notFound();

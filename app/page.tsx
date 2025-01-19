@@ -9,7 +9,6 @@ async function getVideos() {
     'SELECT * FROM video_streaming.videos LIMIT 20'
   );
   const videos: Video[] = result.rows.map(row => mapRowToVideo(row));
-  console.log(videos);
   return videos;
 }
 
@@ -21,7 +20,7 @@ export default async function Home() {
       {/* Continue Watching Section */}
       <section>
         <h2 className="font-sans text-slate-800 text-2xl font-bold mb-4">Continue Watching</h2>
-        <ContinueWatching userId="default-user" />
+        <ContinueWatching userId="00000000-0000-0000-0000-000000000000" />
       </section>
 
       {/* All Videos Section */}
