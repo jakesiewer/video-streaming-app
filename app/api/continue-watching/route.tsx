@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
   
     // Get watched video information from ScyllaDB
     const watchedResults = await scyllaClient.execute(
-      'SELECT video_id FROM video_streaming.watch_progress WHERE user_id = ?',
+      'SELECT video_id, timestamp FROM video_streaming.watch_progress WHERE user_id = ?',
       [userUuid],
       { prepare: true }
     );
@@ -54,7 +54,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ videos: [] });
     }
 
-    const videos: Video[] = videoResults.rows.map(row => mapRowToVideo(row));
+    const videos: (Video & { progress: number })[] = [];
+    
+    for (let i = 0; i < videoResults.rows.length; i++) {
+      const row = videoResults.rows[i];
+      const video = mapRowToVideo(row);
+      const progress = watchedResults.rows.find(watched => watched.video_id.toString === video.video_id.toString)?.timestamp || 0;
+      videos.push({ ...video, progress });
+    }
 
     return NextResponse.json({ videos });
     

@@ -6,28 +6,10 @@ import Image from 'next/image';
 import { Video } from '../lib/scylla';
 
 interface ContinueWatchingProps {
-  userId: string;
+  videos: (Video & { progress: number })[];
 }
 
-export default function ContinueWatching({ userId }: ContinueWatchingProps) {
-    const [videos, setVideos] = useState<(Video & { progress: number })[]>([]);
-  
-    useEffect(() => {
-      async function fetchContinueWatching() {
-        try {
-          const response = await fetch(
-            `/api/continue-watching?userId=${userId}`
-          );
-          const data = await response.json();
-          setVideos(data.videos);
-        } catch (error) {
-          console.error('Error fetching continue watching:', error);
-        }
-      }
-  
-      fetchContinueWatching();
-    }, [userId]);
-  
+export default function ContinueWatching({ videos }: ContinueWatchingProps) {
     if (videos.length === 0) {
       return null;
     }
