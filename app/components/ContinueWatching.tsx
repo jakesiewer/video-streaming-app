@@ -27,7 +27,7 @@ export default function ContinueWatching({ videos }: ContinueWatchingProps) {
                 src={video.thumbnail_url}
                 alt={video.title}
                 fill
-                className="object-cover"
+                className="object-cover transition-transform group-hover:scale-105"
               />
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
                 <div

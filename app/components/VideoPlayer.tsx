@@ -17,12 +17,10 @@ const VideoPlayer = ({
   videoUrl,
   initialProgress,
 }: VideoPlayerProps) => {
-  // const videoIdFromUrl = videoUrl.split('v=')[1];
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  // const [currentTime, setCurrentTime] = useState(initialProgress);
-  // const [duration, setDuration] = useState(0);
   const progressUpdateInterval = useRef<NodeJS.Timeout | undefined>(undefined);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -37,7 +35,6 @@ const VideoPlayer = ({
       progressUpdateInterval.current = setInterval(() => {
         if (videoRef.current) {
           const currentProgress = Math.floor(videoRef.current.currentTime);
-          // setCurrentTime(currentProgress);
           onProgressUpdate(currentProgress);
         }
       }, updateInterval);
@@ -60,32 +57,25 @@ const VideoPlayer = ({
       console.error('Error updating watch progress:', error);
     }
   };
-  // const handleTimeUpdate = () => {
-  //   if (videoRef.current) {
-  //     setCurrentTime(videoRef.current.currentTime);
-  //   }
-  // };
-
-  // const handleLoadedMetadata = () => {
-  //   if (videoRef.current) {
-  //     setDuration(videoRef.current.duration);
-  //   }
-  // };
 
   const handlePlay = () => setIsPlaying(true);
   const handlePause = () => setIsPlaying(false);
+  const handleError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+    setError('Error loading video. Please try again.');
+    console.error('Video error:', e);
+  };
 
   return (
     <div className="relative w-full h-full">
       <video
         ref={videoRef}
         className="w-full h-full"
-        src={videoUrl}
-        // onTimeUpdate={handleTimeUpdate}
-        // onLoadedMetadata={handleLoadedMetadata}
+        src={`/api/stream/${videoId}`}
         onPlay={handlePlay}
         onPause={handlePause}
+        onError={handleError}
         controls
+        playsInline
       />
     </div>
   );
