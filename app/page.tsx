@@ -1,5 +1,7 @@
 // app/page.tsx
-import { scyllaClient, Video, mapRowToVideo } from './lib/scylla';
+import { scyllaClient } from './lib/scylla';
+import { Video } from './lib/entities/models';
+import { mapRowToVideo } from './lib/entities/mappings';
 import Link from 'next/link';
 import ContinueWatching from './components/ContinueWatching';
 import VideoGrid from './components/VideoGrid';

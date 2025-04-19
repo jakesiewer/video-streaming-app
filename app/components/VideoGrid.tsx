@@ -1,4 +1,4 @@
-import { Video } from '../lib/scylla';
+import { Video } from '../lib/entities/models';
 import Image from 'next/image';
 import Link from 'next/link';
 

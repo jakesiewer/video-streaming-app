@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Video } from '../lib/scylla';
+import { Video } from '../lib/entities/models';
 
 interface ContinueWatchingProps {
   videos: (Video & { progress: number })[];

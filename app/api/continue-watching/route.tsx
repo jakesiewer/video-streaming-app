@@ -1,9 +1,8 @@
 // app/api/continue-watching/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { scyllaClient, Video } from 'app/lib/scylla';
-import { mapRowToVideo } from 'app/lib/scylla';
-import { createReadStream, statSync } from 'fs';
-import { join } from 'path';
+import { scyllaClient } from 'app/lib/scylla';
+import { mapRowToVideo } from 'app/lib/entities/mappings';
+import { Video } from 'app/lib/entities/models';
 import { types } from 'cassandra-driver';
 
 const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
