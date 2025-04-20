@@ -1,7 +1,9 @@
 // app/layout.tsx
+
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import ClientLayout from './components/ClientLayout'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,22 +20,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <main className="min-h-screen bg-gray-100">
-          <nav className="bg-white shadow-md">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between h-16">
-                <div className="flex">
-                  <div className="flex-shrink-0 flex items-center">
-                    <h1 className="text-slate-700 text-xl font-bold">StreamApp</h1>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </nav>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {children}
-          </div>
-        </main>
+        <ClientLayout>
+          {children}
+        </ClientLayout>
       </body>
     </html>
   )

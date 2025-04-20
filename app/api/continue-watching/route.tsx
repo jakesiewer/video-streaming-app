@@ -1,9 +1,8 @@
 // app/api/continue-watching/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { scyllaClient, Video } from 'app/lib/scylla';
-import { mapRowToVideo } from 'app/lib/scylla';
-import { createReadStream, statSync } from 'fs';
-import { join } from 'path';
+import { scyllaClient } from 'app/lib/scylla';
+import { mapRowToVideo } from 'app/lib/entities/mappings';
+import { Video } from 'app/lib/entities/models';
 import { types } from 'cassandra-driver';
 
 const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
@@ -41,7 +40,7 @@ export async function GET(request: NextRequest) {
       { prepare: true }
     );
 
-    const watchedIds = watchedResults.rows.map(row => row.video_id);
+    const watchedIds = watchedResults.rows.map((row: types.Row) => row.video_id);
 
     // Get video information from ScyllaDB
     const videoResults = await scyllaClient.execute(
@@ -59,7 +58,7 @@ export async function GET(request: NextRequest) {
     for (let i = 0; i < videoResults.rows.length; i++) {
       const row = videoResults.rows[i];
       const video = mapRowToVideo(row);
-      const progress = watchedResults.rows.find(watched => watched.video_id.toString === video.video_id.toString)?.timestamp || 0;
+      const progress = watchedResults.rows.find(watched => watched.video_id.toString() === video.video_id.toString())?.timestamp || 0;
       videos.push({ ...video, progress });
     }
 

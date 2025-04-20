@@ -1,5 +1,6 @@
 // scripts/seedData.ts
-import { dbOperations, Video } from '../lib/scylla.ts';
+import { dbOperations } from '../lib/scylla.ts';
+import { Video } from '../lib/entities/models.ts';
 import { types } from 'cassandra-driver';
 
 async function seedData() {

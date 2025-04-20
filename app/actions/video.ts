@@ -1,7 +1,7 @@
 // app/actions/video.ts
 'use server';
 
-import { dbOperations } from "app/lib/scylla";
+import { dbOperations } from "../lib/scylla";
 
 export async function updateProgress(userId: string, videoId: string, progress: number) {
     try {
