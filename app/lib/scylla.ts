@@ -1,10 +1,8 @@
 import readline from 'readline';
 
-import { Video, WatchProgress, UserVideo, } from './entities/models';
+import { Video, WatchProgress, UserVideo, } from './entities/models.ts';
 import Mappings from './entities/mappings.ts';
 import Schema from './entities/schemas.ts';
-
-// lib/scylla.ts
 import { Client, types } from 'cassandra-driver';
 
 // ScyllaDB client configuration
@@ -30,7 +28,6 @@ export async function initializeDatabase() {
     const askQuestion = (query : string) => new Promise((resolve) => rl.question(query, resolve));
 
     try {
-        // Always ensure we're connected first
         console.log('Connecting to ScyllaDB...');
         await scyllaClient.connect();
         console.log('✅ Connected to ScyllaDB');
@@ -266,7 +263,7 @@ export const dbOperations = {
 
         const result = await scyllaClient.execute(query, [userId, limit], { prepare: true });
 
-        const userVideos: UserVideo[] = result.rows.map(row => Mappings.mapRowToUserVideo(row));
+        const userVideos: UserVideo[] = result.rows.map((row: types.Row) => Mappings.mapRowToUserVideo(row));
 
         return userVideos;
     }
@@ -280,6 +277,36 @@ export async function initializeScyllaConnection() {
         throw error;
     }
 }
+
+export async function getAllVideos() {
+    const result = await scyllaClient.execute(
+        'SELECT * FROM video_streaming.videos LIMIT 20',
+        [],
+        { prepare: true, fetchSize: 20, consistency: types.consistencies.localQuorum }
+    );
+    const videos: Video[] = result.rows.map((row: types.Row) => Mappings.mapRowToVideo(row));
+    return videos;
+}
+
+export async function getWatchedVideos() {
+    const res = await fetch('http://localhost:3000/api/continue-watching?userId=00000000-0000-0000-0000-000000000000', {
+      method: 'GET',
+      credentials: 'include'
+    });
+  
+    if (!res.ok) {
+      console.error(`Failed to fetch watched videos: ${res.status} ${res.statusText}`);
+      return { videos: [] }; // Return an empty array or handle the error appropriately
+    }
+  
+     try {
+      const watched = await res.json();
+      return watched.videos;
+    } catch (error) {
+      console.error('Error parsing JSON response:', error);
+      return { videos: [] }; // Return an empty array or handle the error appropriately
+    }
+  }
 
 // Initialize the client connection
 scyllaClient.connect()
