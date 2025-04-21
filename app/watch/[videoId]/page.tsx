@@ -2,10 +2,9 @@
 
 import React, { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { types } from 'cassandra-driver';
 import VideoPlayer from '../../components/VideoPlayer';
 import { dbOperations } from '../../lib/scylla';
-import { validate } from 'uuid';
+import { getUserId } from 'app/lib/supabaseServerClient';
 
 interface PageProps {
   params: {
@@ -67,7 +66,7 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
         <div className="aspect-video bg-black rounded-lg overflow-hidden">
           <VideoPlayer
             videoId={videoId}
-            userId="default-user"
+            userId={await getUserId() || ''}
             videoUrl={video.video_url}
             initialProgress={initialProgress}
             // onProgressUpdate={handleProgressUpdate}
