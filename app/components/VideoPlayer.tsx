@@ -2,8 +2,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { updateProgress } from 'app/actions/video';
 
-// commented lines will be uncommented upon completion of continue watching feature
-
 interface VideoPlayerProps {
   videoId: string;
   userId: string;
@@ -13,7 +11,7 @@ interface VideoPlayerProps {
 
 const VideoPlayer = ({
   videoId,
-  // userId,§
+  userId,
   videoUrl,
   initialProgress,
 }: VideoPlayerProps) => {
@@ -51,7 +49,8 @@ const VideoPlayer = ({
   const onProgressUpdate = async (progress: number) => {
 
     try {
-      const message = await updateProgress('00000000-0000-0000-0000-000000000000', videoId, progress);
+      console.log('userId: ', userId);
+      const message = await updateProgress(userId, videoId, progress);
       console.log(message);
     } catch (error) {
       console.error('Error updating watch progress:', error);

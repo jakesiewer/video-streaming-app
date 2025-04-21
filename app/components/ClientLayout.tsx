@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '../lib/supabaseClient'
+import { supabase } from '../lib/supabaseBrowserClient'
 import ProfileHandler from './ProfileHandler'
 
 export default function ClientLayout({
@@ -14,7 +14,7 @@ export default function ClientLayout({
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state changed:', event, session);
+      // console.log('Auth state changed:', event, session);
 
       const storeSession = (session: any) => {
         if (session?.user) {
@@ -28,28 +28,22 @@ export default function ClientLayout({
 
       switch (event) {
         case 'INITIAL_SESSION':
-          // console.log('Initial session:', session);
           storeSession(session);
           break;
         case 'SIGNED_IN':
-          // console.log('User signed in:', session?.user);
           storeSession(session);
           router.push('/');
           break;
         case 'SIGNED_OUT':
-          // console.log('User signed out');
           sessionStorage.clear();
           router.push('/auth/login');
           break;
         case 'PASSWORD_RECOVERY':
-          // console.log('Password recovery initiated');
           break;
-        case 'TOKEN_REFRESHED':
-          // console.log('Token refreshed');
+        case 'TOKEN_REFRESHED': 
           storeSession(session);
           break;
         case 'USER_UPDATED':
-          // console.log('User updated:', session?.user);
           storeSession(session);
           break;
       }

@@ -4,6 +4,7 @@ import { Video, WatchProgress, UserVideo, } from './entities/models.ts';
 import Mappings from './entities/mappings.ts';
 import Schema from './entities/schemas.ts';
 import { Client, types } from 'cassandra-driver';
+import { getUserId } from './supabaseServerClient.ts';
 
 // ScyllaDB client configuration
 export const scyllaClient = new Client({
@@ -289,7 +290,8 @@ export async function getAllVideos() {
 }
 
 export async function getWatchedVideos() {
-    const res = await fetch('http://localhost:3000/api/continue-watching?userId=00000000-0000-0000-0000-000000000000', {
+    const userId = await getUserId();
+    const res = await fetch('http://localhost:3000/api/continue-watching?userId=' + userId, {
       method: 'GET',
       credentials: 'include'
     });
@@ -301,7 +303,9 @@ export async function getWatchedVideos() {
   
      try {
       const watched = await res.json();
-      return watched.videos;
+
+      const videos: (Video & { progress: number })[] = watched.videos;
+      return videos;
     } catch (error) {
       console.error('Error parsing JSON response:', error);
       return { videos: [] }; // Return an empty array or handle the error appropriately
