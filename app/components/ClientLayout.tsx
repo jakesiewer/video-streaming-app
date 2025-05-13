@@ -1,53 +1,47 @@
 'use client';
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '../lib/supabaseBrowserClient'
-import ProfileHandler from './ProfileHandler'
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '../lib/supabaseBrowserClient';
+import ProfileHandler from './ProfileHandler';
 
 export default function ClientLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      // console.log('Auth state changed:', event, session);
-
-      const storeSession = (session: any) => {
+      const handleSession = (session: any) => {
         if (session?.user) {
-          sessionStorage.setItem('user_id', session.user.id);
-          sessionStorage.setItem('user_name', session.user.user_metadata.username);
-          sessionStorage.setItem('user_email', session.user.email);
-          sessionStorage.setItem('access_token', session.access_token || '');
-          sessionStorage.setItem('refresh_token', session.refresh_token || '');
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
         }
       };
 
       switch (event) {
         case 'INITIAL_SESSION':
-          storeSession(session);
-          break;
         case 'SIGNED_IN':
-          storeSession(session);
-          router.push('/');
+        case 'TOKEN_REFRESHED':
+        case 'USER_UPDATED':
+          handleSession(session);
+          if (event === 'SIGNED_IN') router.push('/');
           break;
         case 'SIGNED_OUT':
-          sessionStorage.clear();
+          setIsAuthenticated(false);
           router.push('/auth/login');
           break;
         case 'PASSWORD_RECOVERY':
-          break;
-        case 'TOKEN_REFRESHED': 
-          storeSession(session);
-          break;
-        case 'USER_UPDATED':
-          storeSession(session);
+          // Redirect to password recovery page
+          router.push('/auth/password-recovery');
           break;
       }
     });
+
     return () => {
       subscription?.unsubscribe();
     };
@@ -64,7 +58,7 @@ export default function ClientLayout({
               </div>
             </div>
             <div className="flex items-center">
-              <ProfileHandler />
+              {isAuthenticated && <ProfileHandler />}
             </div>
           </div>
         </div>
@@ -74,4 +68,4 @@ export default function ClientLayout({
       </div>
     </main>
   );
-} 
+}

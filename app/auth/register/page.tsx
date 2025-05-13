@@ -20,6 +20,12 @@ export default function RegisterPage() {
       return;
     }
 
+    const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*_])/;
+    if (!passwordRegex.test(password)) {
+      setError('Password must contain at least one special character and one number');
+      return;
+    }  
+
     try {
       let { error } = await supabase.auth.signUp({
         email: email,
@@ -35,8 +41,9 @@ export default function RegisterPage() {
         setError('Invalid email or password');
         return;
       }
-    } catch (err) {
 
+      window.location.href = '/auth/login';
+    } catch (err) {
       setError('Registration failed. Please try again.');
     }
   };
