@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
-  
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -19,12 +19,35 @@ export async function middleware(req: NextRequest) {
       },
     }
   )
-
   const {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // List of public routes that don't require authentication
+  const isAdminRoute = req.nextUrl.pathname.startsWith('/admin')
+  let isAdmin = false
+
+  if (session) {
+    const { data: userRole, error: roleError } = await supabase
+      .from('user_role')
+      .select('role_id, role_name')
+      .eq('user_id', session.user.id)
+      .single()
+
+    if (roleError) {
+      console.error('Error fetching user role:', roleError);
+      const redirectUrl = new URL('/', req.url)
+      return NextResponse.redirect(redirectUrl)
+    } else {
+      isAdmin = userRole?.role_name.toLowerCase() === 'admin'
+    }
+
+    if (isAdminRoute && !isAdmin) {
+      console.log('User not authorized, isAdminRoute: ', isAdminRoute, 'isAdmin:', isAdmin)
+      const redirectUrl = new URL('/', req.url)
+      return NextResponse.redirect(redirectUrl)
+    }
+  }
+
   const publicRoutes = ['/auth/login', '/auth/register']
   const isPublicRoute = publicRoutes.includes(req.nextUrl.pathname)
 
@@ -32,16 +55,12 @@ export async function middleware(req: NextRequest) {
   console.log('Session exists:', !!session)
   console.log('Is public route:', isPublicRoute)
 
-  // If the user is not authenticated and trying to access a protected route
   if (!session && !isPublicRoute) {
-    console.log('Redirecting to login - No session and not a public route')
     const redirectUrl = new URL('/auth/login', req.url)
     return NextResponse.redirect(redirectUrl)
   }
 
-  // If the user is authenticated and trying to access auth pages
   if (session && isPublicRoute) {
-    console.log('Redirecting to home - Has session and trying to access public route')
     const redirectUrl = new URL('/', req.url)
     return NextResponse.redirect(redirectUrl)
   }
@@ -49,15 +68,19 @@ export async function middleware(req: NextRequest) {
   return res
 }
 
+
+
 // Configure which routes to run middleware on
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
+     * Match all request paths except for the ones starting with:
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
+     *
+     * It will apply to both UI routes and API routes.
      */
     '/((?!_next/static|_next/image|favicon.ico|public/|api/).*)',
   ],
