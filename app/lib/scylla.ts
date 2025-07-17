@@ -1,6 +1,6 @@
 import readline from 'readline';
 
-import { Video, WatchProgress, UserVideo, } from './entities/models.ts';
+import { Video, WatchProgress, UserVideo, VideosByUser, } from './entities/models.ts';
 import Mappings from './entities/mappings.ts';
 import Schema from './entities/schemas.ts';
 import { Client, types } from 'cassandra-driver';
@@ -26,16 +26,16 @@ export async function initializeDatabase() {
         output: process.stdout
     });
 
-    const askQuestion = (query : string) => new Promise((resolve) => rl.question(query, resolve));
+    const askQuestion = (query: string) => new Promise((resolve) => rl.question(query, resolve));
 
     try {
         console.log('Connecting to ScyllaDB...');
         await scyllaClient.connect();
         console.log('✅ Connected to ScyllaDB');
-        
+
         // Ask if the user wants to execute all commands automatically
         const executeAll = (await askQuestion('Do you want to execute all initialization steps? (y/n): ')) as string;
-        
+
         // Keyspace creation
         let keyspaceExists = false;
         if (executeAll.toLowerCase() === 'y') {
@@ -43,7 +43,7 @@ export async function initializeDatabase() {
                 await scyllaClient.execute(Schema.keyspace);
                 console.log('✅ Created keyspace: video_streaming');
                 keyspaceExists = true;
-            } catch (error : any) {
+            } catch (error: any) {
                 if (error.message.includes('already exists')) {
                     console.log('ℹ️ Keyspace video_streaming already exists');
                     keyspaceExists = true;
@@ -93,7 +93,7 @@ export async function initializeDatabase() {
                 }
             }
         });
-        
+
         // Connect the new client
         await clientWithKeyspace.connect();
         console.log('✅ Connected to video_streaming keyspace');
@@ -104,7 +104,7 @@ export async function initializeDatabase() {
                 try {
                     await clientWithKeyspace.execute(tableSchema);
                     console.log(`✅ Created table: ${tableName}`);
-                } catch (error : any) {
+                } catch (error: any) {
                     if (error.message.includes('already exists')) {
                         console.log(`ℹ️ Table ${tableName} already exists`);
                     } else {
@@ -132,10 +132,10 @@ export async function initializeDatabase() {
 
         // Shutdown the initial client as we don't need it anymore
         await scyllaClient.shutdown();
-        
+
         // Replace the original client with the new one
         Object.assign(scyllaClient, clientWithKeyspace);
-        
+
         console.log('✅ Database initialization completed successfully');
         rl.close();
     } catch (error) {
@@ -292,25 +292,54 @@ export async function getAllVideos() {
 export async function getWatchedVideos() {
     const userId = await getUserId();
     const res = await fetch('http://localhost:3000/api/continue-watching?userId=' + userId, {
-      method: 'GET',
-      credentials: 'include'
+        method: 'GET',
+        credentials: 'include'
     });
-  
-    if (!res.ok) {
-      console.error(`Failed to fetch watched videos: ${res.status} ${res.statusText}`);
-      return { videos: [] }; // Return an empty array or handle the error appropriately
-    }
-  
-     try {
-      const watched = await res.json();
 
-      const videos: (Video & { progress: number })[] = watched.videos;
-      return videos;
-    } catch (error) {
-      console.error('Error parsing JSON response:', error);
-      return { videos: [] }; // Return an empty array or handle the error appropriately
+    if (!res.ok) {
+        console.error(`Failed to fetch watched videos: ${res.status} ${res.statusText}`);
+        return { videos: [] }; // Return an empty array or handle the error appropriately
     }
-  }
+
+    try {
+        const watched = await res.json();
+
+        const videos: (Video & { progress: number })[] = watched.videos;
+        return videos;
+    } catch (error) {
+        console.error('Error parsing JSON response:', error);
+        return { videos: [] }; // Return an empty array or handle the error appropriately
+    }
+}
+
+export async function getUserVideos(
+    userId: string,
+    limit: number = 10
+): Promise<Video[]> {
+    const videosByUserQuery = `
+    SELECT * FROM video_streaming.videos_by_user 
+    WHERE user_id = ? 
+    LIMIT ?
+  `;
+
+    const videosQuery = `
+    SELECT * FROM video_streaming.videos 
+    WHERE video_id IN ? 
+    LIMIT ?
+  `;
+
+    const result = await scyllaClient.execute(videosByUserQuery, [types.Uuid.fromString(userId), limit], { prepare: true });
+    const videosByUser: VideosByUser[] = result.rows.map((row: types.Row) => Mappings.mapRowToVideosByUser(row));
+    const videoIds: types.Uuid[] = videosByUser.map((video) => types.Uuid.fromString(video.video_id.toString()));
+    if (videoIds.length === 0) {
+        return []; // Return an empty array if no videos found for the user
+    }
+
+    const videosResult = await scyllaClient.execute(videosQuery, [videoIds, limit], { prepare: true });
+    const videos: Video[] = videosResult.rows.map((row: types.Row) => Mappings.mapRowToVideo(row));
+
+    return videos;
+}
 
 // Initialize the client connection
 scyllaClient.connect()
