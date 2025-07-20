@@ -1,6 +1,7 @@
 import { Video } from '../lib/entities/models';
 import Image from 'next/image';
 import Link from 'next/link';
+import { env } from 'process';
 
 interface VideoGridProps {
   videos: Video[];
@@ -17,7 +18,7 @@ export default function VideoGrid({ videos }: VideoGridProps) {
         >
           <div className="relative aspect-video overflow-hidden rounded-lg bg-gray-200">
             <Image
-              src={video.thumbnail_url}
+              src={`${env.AWS_CLOUDFRONT_URL}/user-videos/${video.video_id}/thumbnails/thumbnail.jpg`}
               alt={video.title}
               fill
               className="object-cover transition-transform group-hover:scale-105"
