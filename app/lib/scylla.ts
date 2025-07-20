@@ -171,6 +171,26 @@ export const dbOperations = {
         return video.video_id;
     },
 
+    async assignVideoToUser(
+        userId: types.Uuid,
+        videoId: types.Uuid
+    ): Promise<types.Uuid> {
+        const query = `
+      INSERT INTO video_streaming.videos_by_user (
+        user_id, video_id
+      ) VALUES (?, ?)
+    `;
+
+        await scyllaClient.execute(query, [
+            userId,
+            videoId
+        ], { prepare: true });
+
+        console.log(`Video ${videoId} assigned to user ${userId}`);
+        
+        return userId;
+    },
+
     async getVideo(videoId: string): Promise<Video | null> {
         const query = 'SELECT * FROM video_streaming.videos WHERE video_id = ?';
         const result = await scyllaClient.execute(query, [videoId], { prepare: true });
