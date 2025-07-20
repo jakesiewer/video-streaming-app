@@ -52,7 +52,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
 AWS_REGION="your-aws-region"
 AWS_ACCESS_KEY_ID="your-aws-access-key"
 AWS_SECRET_ACCESS_KEY="your-aws-secret-key"
-AWS_BUCKET_NAME="your-s3-bucket-name"
+AWS_S3_BUCKET_NAME="your-s3-bucket-name"
 ```
 
 4. Initialize the database:
