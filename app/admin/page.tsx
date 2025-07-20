@@ -51,7 +51,7 @@ export default async function AdminDashboard() {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="text-2xl text-slate-700 font-bold mb-6">Admin Dashboard</h1>
+            <h1 className="text-2xl text-slate-800 font-bold mb-6">Admin Dashboard</h1>
             <div className="bg-white shadow-md rounded-lg overflow-hidden">
                 <table className="min-w-full">
                     <thead className="bg-gray-50">

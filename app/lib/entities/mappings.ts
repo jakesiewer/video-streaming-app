@@ -1,4 +1,4 @@
-import { Video, WatchProgress, UserVideo, User, Role } from './models.ts';
+import { Video, WatchProgress, UserVideo, Role, VideosByUser } from './models.ts';
 
 // ==================== Mapping Functions ====================
 
@@ -36,17 +36,10 @@ export function mapRowToUserVideo(row: any): UserVideo {
     };
 }
 
-// User-related mapping functions
-export function mapRowToUser(row: any): User {
+export function mapRowToVideosByUser(row: any): VideosByUser {
     return {
         user_id: row.user_id,
-        username: row.username,
-        email: row.email,
-        password_hash: row.password_hash,
-        role_id: row.role_id,
-        created_at: row.created_at,
-        last_login: row.last_login,
-        metadata: row.metadata
+        video_id: row.video_id,
     };
 }
 
@@ -60,11 +53,10 @@ export function mapRowToRole(row: any): Role {
     };
 }
 
-// Add this at the bottom of the file
 export default {
     mapRowToVideo,
     mapRowToWatchProgress,
     mapRowToUserVideo,
-    mapRowToUser,
+    mapRowToVideosByUser,
     mapRowToRole
 };

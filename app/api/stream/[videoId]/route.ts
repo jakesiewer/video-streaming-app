@@ -1,50 +1,53 @@
-// app/api/stream/[videoId]/route.ts
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from '@aws-sdk/cloudfront-signer';
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 
-const s3 = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-});
+const privateKeyPath = path.resolve(process.cwd(), 'private_key.pem');
+const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
 
 export async function GET(
   request: NextRequest,
-  context: { params: { videoId: string } }
+  context: { params: Promise<{ videoId: string }> }
 ) {
   const { videoId } = await context.params;
   const range = request.headers.get('range');
 
-;  if (!range) {
+  if (!range) {
     return new NextResponse('Range header required', { status: 400 });
   }
 
+  const cloudfrontDomain = process.env.AWS_CLOUDFRONT_URL;
+  const videoPath = `/user-videos/${videoId}/videos/video.mp4`;
+
+  const signedUrl = getSignedUrl({
+    url: `${cloudfrontDomain}${videoPath}`,
+    keyPairId: process.env.AWS_CLOUDFRONT_KEY_PAIR_ID!,
+    privateKey: privateKey,
+    dateLessThan: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 mins expiry
+  });
+
   try {
-    const command = new GetObjectCommand({
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: `videos/${videoId}.mp4`,
-      Range: range,
+    const res = await fetch(signedUrl, {
+      headers: {
+        Range: range,
+      },
     });
 
-    const response = await s3.send(command);
-    
+    // Forward CloudFront response back to client
     const headers = new Headers({
-      'Content-Range': response.ContentRange!,
+      'Content-Range': res.headers.get('Content-Range') || '',
       'Accept-Ranges': 'bytes',
-      'Content-Length': response.ContentLength?.toString() || '0',
-      'Content-Type': 'video/mp4',
+      'Content-Length': res.headers.get('Content-Length') || '',
+      'Content-Type': res.headers.get('Content-Type') || 'video/mp4',
     });
 
-    const stream = response.Body as ReadableStream;
-
-    return new NextResponse(stream, {
-      status: 206,
-      headers: headers,
+    return new NextResponse(res.body, {
+      status: res.status,
+      headers,
     });
   } catch (error) {
-    console.error('Error streaming video:', error);
+    console.error('Error streaming from CloudFront:', error);
     return new NextResponse('Error streaming video', { status: 500 });
   }
 }
