@@ -1,5 +1,5 @@
 'use client';
-import { supabase } from 'app/lib/supabaseBrowserClient';
+import { supabase } from 'app/lib/supabase/client/supabaseBrowserClient';
 import { get } from 'http';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';

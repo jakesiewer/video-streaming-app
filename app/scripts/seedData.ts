@@ -1,5 +1,4 @@
 // scripts/seedData.ts
-import { dbOperations } from '../lib/scylla.ts';
 import { Video } from '../lib/entities/models.ts';
 import { types } from 'cassandra-driver';
 
@@ -32,7 +31,7 @@ async function seedData() {
       {
         video_id: types.Uuid.random(),
         title: 'Home Video',
-        description: 'Test Video - 3',
+        description: 'Test Video - 1',
         duration: 21, // 21 seconds
         thumbnail_url: '/seed_data/photos/home.jpg',
         video_url: '/seed_data/videos/home.mp4',
@@ -42,10 +41,10 @@ async function seedData() {
       }
     ];
 
-    for (const video of videos) {
-      const videoId = await dbOperations.createVideo(video);
-      console.log(`Created video with ID: ${videoId}`);
-    }
+    // for (const video of videos) {
+    //   const videoId = await dbOperations.createVideo(video);
+    //   console.log(`Created video with ID: ${videoId}`);
+    // }
 
     console.log('Seed data added successfully');
     process.exit(0);

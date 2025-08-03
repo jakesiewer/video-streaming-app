@@ -1,18 +1,40 @@
 'use client'
 import React, { useEffect, useRef, useState } from 'react';
-import { updateProgress } from 'app/actions/video';
 
 interface VideoPlayerProps {
   videoId: string;
   userId: string;
-  videoUrl: string;
   initialProgress: number;
 }
+
+async function updateWatchProgress(
+  userId: string,
+  videoId: string,
+  timestamp: number
+): Promise<boolean> {
+  const response = await fetch('/api/update-progress', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userId,
+      videoId,
+      progress: timestamp,
+    }),
+  });
+
+  if (!response.ok) {
+    console.error('Failed to update watch progress:', response.statusText);
+    return false;
+  }
+
+  return true;
+};
 
 const VideoPlayer = ({
   videoId,
   userId,
-  videoUrl,
   initialProgress,
 }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -47,13 +69,12 @@ const VideoPlayer = ({
 
 
   const onProgressUpdate = async (progress: number) => {
-
-    try {
-      console.log('userId: ', userId);
-      const message = await updateProgress(userId, videoId, progress);
-      console.log(message);
-    } catch (error) {
-      console.error('Error updating watch progress:', error);
+    const res = await updateWatchProgress(userId, videoId, progress);
+    if (!res) {
+      console.error('Failed to update progress:');
+      setError('Failed to update progress. Please try again later.');
+    } else {
+      console.log('Progress updated successfully:', progress);
     }
   };
 
