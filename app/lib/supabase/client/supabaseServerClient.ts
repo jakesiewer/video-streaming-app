@@ -30,4 +30,4 @@ export async function isAuthenticated() {
 export async function getUserId() {
   const user = await getServerUser()
   return user?.id
-} 
+}

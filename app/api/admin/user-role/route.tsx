@@ -1,7 +1,7 @@
-
+// app/api/user-role/route.tsx
 
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from 'app/lib/supabaseService';
+import { supabaseAdmin } from 'app/lib/supabase/client/supabaseClient';
 
 export async function POST(req: Request) {
   try {

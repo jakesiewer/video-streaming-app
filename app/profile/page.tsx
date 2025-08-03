@@ -1,7 +1,8 @@
 import ContinueWatching from "app/components/ContinueWatching";
 import VideoGrid from "app/components/VideoGrid";
-import { getWatchedVideos, getUserVideos } from "app/lib/scylla";
-import { getUserId } from "app/lib/supabaseServerClient";
+import { getWatchedVideos } from "app/lib/scylla/queries";
+import { getUserId } from "app/lib/supabase/client/supabaseServerClient";
+import { getVideosForUser } from "app/lib/supabase/queries";
 import VideoUploadForm from "./VideoUploadForm";
 
 export default async function Profile() {
@@ -15,9 +16,10 @@ export default async function Profile() {
         );
     }
     const [userVideos, watchedVideos] = await Promise.all([
-        getUserVideos(userId),
-        getWatchedVideos()
+        getVideosForUser(userId),
+        getWatchedVideos(userId)
     ]);
+
     return (
         <div className="space-y-8">
             <VideoUploadForm />
@@ -32,7 +34,7 @@ export default async function Profile() {
             {Array.isArray(userVideos) && userVideos.length > 0 && (
                 <section>
                     <h2 className="font-sans text-slate-800 text-2xl font-bold mb-4">Your Videos</h2>
-                    <VideoGrid videos={userVideos} />
+                    <VideoGrid videos={userVideos} canDelete={true} />
                 </section>
             )}
         </div>

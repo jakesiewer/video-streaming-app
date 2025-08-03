@@ -1,5 +1,5 @@
 // scripts/initDb.ts
-import { initializeDatabase } from '../lib/scylla.ts';
+import { initializeDatabase } from "app/lib/scylla/initialise";
 
 async function init() {
   try {

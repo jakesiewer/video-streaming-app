@@ -1,5 +1,5 @@
 'use client';
-import { getUserId } from "app/lib/supabaseBrowserClient";
+import { getUserId } from "app/lib/supabase/client/supabaseBrowserClient";
 import { useState } from "react";
 
 export default function VideoUploadForm() {
@@ -7,8 +7,9 @@ export default function VideoUploadForm() {
     const [file, setFile] = useState<File | null>(null);
     const [status, setStatus] = useState("");
     const [progress, setProgress] = useState<number | null>(null);
+    const [duration, setDuration] = useState<number>(0);
 
-    const createVideo = async (videoId: string, userId: string, title: string, duration: number) => {
+    const createVideo = async (userId: string, title: string, duration: number) => {
         try {
             const response = await fetch("/api/create-video", {
                 method: "POST",
@@ -16,7 +17,6 @@ export default function VideoUploadForm() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    videoId: videoId,
                     userId: userId,
                     title,
                     duration,
@@ -30,7 +30,8 @@ export default function VideoUploadForm() {
                 return false;
             }
 
-            return true;
+            const { videoId } = await response.json();
+            return videoId;
         } catch (error) {
             console.error("Error creating video:", error);
             return false;
@@ -50,9 +51,17 @@ export default function VideoUploadForm() {
             return;
         }
 
+        const videoId = await createVideo(userId, title, duration);
+
         try {
-            const res = await fetch(`/api/upload-url`);
-            const { uploadUrl, videoId, key } = await res.json();
+            const res = await fetch(`/api/upload-url?videoId=${videoId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const { uploadUrl, key } = await res.json();
 
             const xhr = new XMLHttpRequest();
             xhr.open("PUT", uploadUrl);
@@ -63,62 +72,29 @@ export default function VideoUploadForm() {
                     setProgress(percent);
                 }
             };
-
             xhr.onload = async () => {
                 if (xhr.status === 200) {
                     setStatus("Upload successful!");
-                    console.log("Uploaded to S3 key:", key);
 
-                    // Extract video duration using HTMLVideoElement
-                    const videoElement = document.createElement("video");
-                    videoElement.preload = "metadata";
-
-                    videoElement.onloadedmetadata = async () => {
-                        window.URL.revokeObjectURL(videoElement.src);
-                        const duration = videoElement.duration;
-                        const videoCreated = await createVideo(videoId, userId, title, duration);
-
-                        if (videoCreated) {
-                            setStatus("Video created successfully!");
-                        } else {
-                            // Attempt to delete uploaded file on failure
-                            await fetch("/api/delete-video", {
-                                method: "DELETE",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify({ key }),
-                            });
-                            setStatus("Video creation failed. Upload was rolled back.");
-                        }
-                        setProgress(null);
-                    };
-
-                    videoElement.onerror = () => {
-                        setStatus("Failed to read video metadata.");
-                        setProgress(null);
-                    };
-
-                    videoElement.src = URL.createObjectURL(file);
+                    // Video creation is already handled in the onloadedmetadata callback
+                    setProgress(null);
                 } else {
                     setStatus("Upload failed.");
                     console.error("Upload error:", xhr.responseText);
                     setProgress(null);
                 }
             };
-
             xhr.onerror = () => {
                 setStatus("An error occurred during upload.");
                 setProgress(null);
-            };
-
+            }
             xhr.setRequestHeader("Content-Type", file.type);
             xhr.send(file);
         } catch (err) {
             console.error(err);
             setStatus("An error occurred during upload.");
         }
-    };
+    }
     return (
         <section className="bg-white rounded-lg shadow p-6 mb-8">
             <h2 className="text-xl font-semibold text-slate-700 mb-4">Upload a Video</h2>
@@ -147,6 +123,13 @@ export default function VideoUploadForm() {
                         onChange={(e) => {
                             if (e.target.files?.[0]) {
                                 setFile(e.target.files[0]);
+                                const videoEl = document.createElement("video");
+                                videoEl.preload = "metadata";
+                                videoEl.onloadedmetadata = () => {
+                                    window.URL.revokeObjectURL(videoEl.src);
+                                    setDuration(Math.round(videoEl.duration));
+                                };
+                                videoEl.src = URL.createObjectURL(e.target.files[0]);
                             }
                         }}
                         className="block w-full text-gray-700"

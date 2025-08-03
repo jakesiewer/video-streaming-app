@@ -3,8 +3,9 @@
 import React, { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import VideoPlayer from '../../components/VideoPlayer';
-import { dbOperations } from '../../lib/scylla';
-import { getUserId } from 'app/lib/supabaseServerClient';
+import { getWatchProgress } from 'app/lib/scylla/queries';
+import { getUserId } from 'app/lib/supabase/client/supabaseServerClient';
+import { getVideoDetails } from 'app/lib/supabase/queries';
 
 interface PageProps {
   params: {
@@ -15,29 +16,9 @@ interface PageProps {
   };
 }
 
-async function getVideoDetails(videoId: string) {
+async function getProgress(videoId: string) {
   try {
-    const video = await dbOperations.getVideo(videoId);
-    console.log("Getting video details");
-    if (!video) {
-      console.log('No video found');
-      return null;
-    }
-
-    return {
-      ...video,
-      video_id: video.video_id,
-      created_at: video.created_at?.toISOString(),
-    };
-  } catch (error) {
-    console.error('Error fetching video:', error);
-    return null;
-  }
-}
-
-async function getWatchProgress(userId: string, videoId: string) {
-  try {
-    const progress = await dbOperations.getWatchProgress(userId, videoId);
+    const progress = await getWatchProgress(videoId);
     return progress?.timestamp || 0;
   } catch (error) {
     console.error('Error fetching watch progress:', error);
@@ -56,7 +37,7 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
 
   const initialProgress = resolvedSearchParams.t
     ? parseInt(resolvedSearchParams.t, 10)
-    : await getWatchProgress('default-user', videoId);
+    : await getProgress(videoId);
   
     console.log("Initial progress: " + initialProgress);
 
@@ -67,38 +48,13 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
           <VideoPlayer
             videoId={videoId}
             userId={await getUserId() || ''}
-            videoUrl={video.video_url}
             initialProgress={initialProgress}
-            // onProgressUpdate={handleProgressUpdate}
           />
         </div>
       </Suspense>
       <div className="mt-6">
         <h1 className="text-2xl text-gray-800 font-bold">{video.title}</h1>
         <p className="mt-2 text-gray-600">{video.description}</p>
-        
-        {video.tags && video.tags.size > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {Array.from(video.tags).map((tag) => (
-              <span
-                key={tag}
-                className="px-2 py-1 bg-gray-100 rounded-full text-sm text-gray-600"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-        {video.metadata && Object.keys(video.metadata).length > 0 && (
-          <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-            {Object.entries(video.metadata).map(([key, value]) => (
-              <div key={key} className="border rounded-lg p-3">
-                <dt className="text-sm text-gray-500">{key}</dt>
-                <dd className="mt-1 text-sm font-semibold">{value}</dd>
-              </div>
-            ))}
-          </dl>
-        )}
       </div>
     </div>
   );

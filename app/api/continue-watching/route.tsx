@@ -1,17 +1,15 @@
-// app/api/continue-watching/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { scyllaClient } from 'app/lib/scylla';
-import { mapRowToVideo } from 'app/lib/entities/mappings';
-import { Video } from 'app/lib/entities/models';
-import { types } from 'cassandra-driver';
+// app/api/continue-watching/route.tsx
 
-const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
+import { NextRequest, NextResponse } from 'next/server';
+import { scyllaClient } from 'app/lib/scylla/client';
+import { Video } from 'app/lib/supabase/entities';
+import { types } from 'cassandra-driver';
+import { getListOfVideos } from 'app/lib/supabase/queries';
 
 export async function GET(request: NextRequest) {
   try {
     console.log('Getting continue watching');
     
-    // Get userId from searchParams
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     
@@ -22,7 +20,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Validate and convert userId to UUID
     let userUuid: types.Uuid;
     try {
       userUuid = types.Uuid.fromString(userId);
@@ -33,32 +30,28 @@ export async function GET(request: NextRequest) {
       );
     }
   
-    // Get watched video information from ScyllaDB
     const watchedResults = await scyllaClient.execute(
       'SELECT video_id, timestamp FROM video_streaming.watch_progress WHERE user_id = ?',
       [userUuid],
       { prepare: true }
     );
 
-    const watchedIds = watchedResults.rows.map((row: types.Row) => row.video_id);
+    if (!watchedResults.rows.length) {
+      return NextResponse.json({ videos: [] });
+    }
 
-    // Get video information from ScyllaDB
-    const videoResults = await scyllaClient.execute(
-      'SELECT * FROM video_streaming.videos WHERE video_id IN ?',
-      [watchedIds],
-      { prepare: true }
-    );
+    const watchedIds: string[] = watchedResults.rows.map((row: types.Row) => row.video_id.toString());
 
-    if (!videoResults.rows.length) {
+    const videoResults = await getListOfVideos(watchedIds);
+
+    if (!videoResults.length) {
       return NextResponse.json({ videos: [] });
     }
 
     const videos: (Video & { progress: number })[] = [];
-    
-    for (let i = 0; i < videoResults.rows.length; i++) {
-      const row = videoResults.rows[i];
-      const video = mapRowToVideo(row);
-      const progress = watchedResults.rows.find(watched => watched.video_id.toString() === video.video_id.toString())?.timestamp || 0;
+
+    for (const video of videoResults) {
+      const progress = watchedResults.rows.find((watched: any) => watched.video_id.toString() === video.video_id.toString())?.timestamp || 0;
       videos.push({ ...video, progress });
     }
 

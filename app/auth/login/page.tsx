@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { supabase } from 'app/lib/supabaseBrowserClient';
+import { supabase } from 'app/lib/supabase/client/supabaseBrowserClient';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
