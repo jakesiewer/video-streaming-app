@@ -1,6 +1,6 @@
 import EditUserRoleButton from './EditUserRoleButton';
 import { Role } from 'app/lib/entities/models.ts';
-import { supabaseAdmin } from 'app/lib/supabaseService';
+import { supabaseAdmin } from 'app/lib/supabase/client/supabaseClient';
 import { mapRowToRole } from 'app/lib/entities/mappings';
 import DeleteUserButton from './DeleteUserButton';
 
