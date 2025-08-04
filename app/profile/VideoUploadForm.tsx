@@ -11,7 +11,7 @@ export default function VideoUploadForm() {
 
     const createVideo = async (userId: string, title: string, duration: number) => {
         try {
-            const response = await fetch("/api/create-video", {
+            const response = await fetch("/api/video", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -38,6 +38,31 @@ export default function VideoUploadForm() {
         }
     }
 
+    const deleteVideo = async (videoId: string) => {
+        try {
+            const response = await fetch("/api/video", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    videoId: videoId,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Error deleting video:", errorData);
+                return false;
+            }
+
+
+        } catch (error) {
+            console.error("Error deleting video:", error);
+            return false;
+        }
+    }
+
     const handleUpload = async () => {
         const userId = await getUserId();
 
@@ -54,7 +79,7 @@ export default function VideoUploadForm() {
         const videoId = await createVideo(userId, title, duration);
 
         try {
-            const res = await fetch(`/api/upload-url?videoId=${videoId}`, {
+            const res = await fetch(`/api/signed-url/upload?videoId=${videoId}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -78,8 +103,17 @@ export default function VideoUploadForm() {
 
                     // Video creation is already handled in the onloadedmetadata callback
                     setProgress(null);
+                    window.location.reload();
                 } else {
                     setStatus("Upload failed.");
+                    deleteVideo(videoId)
+                        .then((success) => {
+                            if (!success) {
+                                console.error("Failed to delete video after upload failure.");
+                            } else {
+                                console.log("Video deleted successfully after upload failure.");
+                            }
+                        });
                     console.error("Upload error:", xhr.responseText);
                     setProgress(null);
                 }

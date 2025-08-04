@@ -1,4 +1,4 @@
-// app/api/create-video/route.ts
+// app/api/video/route.ts
 import { supabase } from "app/lib/supabase/client/supabaseClient";
 import { VideoInit } from "app/lib/supabase/entities";
 import { createVideo, deleteVideo } from "app/lib/supabase/queries";
@@ -34,18 +34,20 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
   const videoId = searchParams.get('videoId');
+  console.log('Deleting video with ID:', videoId);
+
   if (!videoId) {
     return new Response('Video ID is required', { status: 400 });
   }
 
-  deleteVideo(videoId)
-    .then((success) => {
-      if (!success) {
-        return new Response('Failed to delete video', { status: 500 });
-      }
-      console.log('Video deleted successfully:', videoId);
-      return new Response('Video deleted successfully', { status: 200 });
-    });
+  const success = await deleteVideo(videoId);
+
+  if (!success) {
+    return new Response('Failed to delete video', { status: 500 });
+  }
+
+  console.log('Video deleted successfully:', videoId);
+  return new Response('Video deleted successfully', { status: 200 });
 }
 
 export async function GET(request: Request) {

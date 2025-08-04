@@ -8,6 +8,8 @@ interface ContinueWatchingProps {
 }
 
 export default function ContinueWatching({ videos }: ContinueWatchingProps) {
+  const cloudfrontUrl = process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL;
+  
   if (videos.length === 0) {
     return null;
   }
@@ -22,7 +24,7 @@ export default function ContinueWatching({ videos }: ContinueWatchingProps) {
           >
             <div className="relative aspect-video overflow-hidden rounded-lg bg-gray-200">
               <Image
-                src={`${env.AWS_CLOUDFRONT_URL}/user-videos/${video.video_id}/thumbnails/thumbnail.jpg`}
+                src={`${cloudfrontUrl}/user-videos/${video.video_id}/thumbnails/thumbnail.jpg`}
                 alt={video.title}
                 fill
                 className="object-cover transition-transform group-hover:scale-105"
