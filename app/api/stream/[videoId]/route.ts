@@ -17,7 +17,7 @@ export async function GET(
     return new NextResponse('Range header required', { status: 400 });
   }
 
-  const cloudfrontDomain = process.env.AWS_CLOUDFRONT_URL;
+  const cloudfrontDomain = process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL;
   const videoPath = `/user-videos/${videoId}/videos/video.mp4`;
 
   const signedUrl = getSignedUrl({

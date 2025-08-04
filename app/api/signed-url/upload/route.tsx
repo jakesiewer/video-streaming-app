@@ -1,4 +1,5 @@
-// app/api/upload-url/route.ts
+// app/api/signed-url/upload/route.tsx
+
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { NextResponse } from 'next/server';
