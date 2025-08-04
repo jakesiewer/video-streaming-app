@@ -1,4 +1,4 @@
-import { supabaseAdmin } from 'app/lib/supabaseService';
+import { supabaseAdmin } from "app/lib/supabase/client/supabaseClient";
 
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
